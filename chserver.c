@@ -5,6 +5,7 @@
 #include <pthread.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <time.h> 
 
 #define MAX_CLIENTS 10
 #define BUFFER_SIZE 1024
@@ -20,10 +21,15 @@ pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void send_message_to_all(const char *message, const char *sender) {
     pthread_mutex_lock(&clients_mutex);
+    time_t current_time = time(NULL);
+    struct tm *time_info = localtime(&current_time);
+    char formatted_time[9];
+    strftime(formatted_time, sizeof(formatted_time), "%H:%M:%S", time_info);
+    
     for (int i = 0; i < MAX_CLIENTS; i++) {
         if (clients[i].client_socket != -1 && strcmp(clients[i].client_name, sender) != 0) {
             char formatted_message[BUFFER_SIZE];
-            snprintf(formatted_message, BUFFER_SIZE, "%s: %s", sender, message);
+            snprintf(formatted_message, BUFFER_SIZE, "[%s] %s: %s", formatted_time, sender, message);
             write(clients[i].client_socket, formatted_message, strlen(formatted_message));
         }
     }
@@ -32,17 +38,21 @@ void send_message_to_all(const char *message, const char *sender) {
 
 void send_private_message(const char *recipient, const char *message, const char *sender) {
     pthread_mutex_lock(&clients_mutex);
+    time_t current_time = time(NULL);
+    struct tm *time_info = localtime(&current_time);
+    char formatted_time[9];
+    strftime(formatted_time, sizeof(formatted_time), "%H:%M:%S", time_info);
+    
     for (int i = 0; i < MAX_CLIENTS; i++) {
         if (clients[i].client_socket != -1 && strcmp(clients[i].client_name, recipient) == 0) {
             char formatted_message[BUFFER_SIZE];
-            snprintf(formatted_message, BUFFER_SIZE, "[Private from %s]: %s", sender, message);
+            snprintf(formatted_message, BUFFER_SIZE, "[%s] [Private from %s]: %s", formatted_time, sender, message);
             write(clients[i].client_socket, formatted_message, strlen(formatted_message));
             break;
         }
     }
     pthread_mutex_unlock(&clients_mutex);
 }
-
 void send_client_list(int client_socket) {
     pthread_mutex_lock(&clients_mutex);
     for (int i = 0; i < MAX_CLIENTS; i++) {
@@ -53,6 +63,7 @@ void send_client_list(int client_socket) {
     }
     pthread_mutex_unlock(&clients_mutex);
 }
+
 
 void *handle_client(void *client_socket_ptr) {
     int client_socket = *(int *)client_socket_ptr;
