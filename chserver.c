@@ -176,7 +176,7 @@ int main() {
         exit(EXIT_FAILURE);
     }
     
-    printf("Chat server is running. Listening on port %i.\n",port_no);
+    printf("Chat server is running. Awaiting connections on port %i.\n",port_no);
     
     while (1) {
         // Accept a new client connection
