@@ -54,10 +54,12 @@ void send_private_message(const char *recipient, const char *message, const char
     pthread_mutex_unlock(&clients_mutex);
 }
 
-void send_welcome_message(int client_socket) {
-    char welcome_message[] = "Welcome to the chat server! Type /help to see the commands.\n";
+void send_welcome_message(int client_socket, const char *client_name) {
+    char welcome_message[BUFFER_SIZE];
+    snprintf(welcome_message, BUFFER_SIZE, "Welcome to the chat server, %s! Type /help to see the commands.\n", client_name);
     write(client_socket, welcome_message, strlen(welcome_message));
 }
+
 
 void send_disconnection_message(int client_socket) {
     char disconnection_message[] = "You have been disconnected from the server.\n";
@@ -79,7 +81,8 @@ void *handle_client(void *client_socket_ptr) {
     }
     pthread_mutex_unlock(&clients_mutex);
     
-    send_welcome_message(client_socket);
+    send_welcome_message(client_socket, client_name);
+
     printf("Client '%s' connected.\n", client_name);
     
     char message[BUFFER_SIZE];
@@ -156,8 +159,10 @@ int main() {
     // Set server address configuration
     server_address.sin_family = AF_INET;
     server_address.sin_addr.s_addr = INADDR_ANY;
-    int port_no = 9999;
+    int port_no = 7373;
     server_address.sin_port = htons(port_no);
+    
+       sleep(1);
     
     // Bind server socket to address
     if (bind(server_socket, (struct sockaddr *)&server_address, sizeof(server_address)) < 0) {
