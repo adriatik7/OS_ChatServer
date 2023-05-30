@@ -55,7 +55,7 @@ void send_private_message(const char *recipient, const char *message, const char
 }
 
 void send_welcome_message(int client_socket) {
-    char welcome_message[] = "Welcome to the chat server! You are now connected.\n";
+    char welcome_message[] = "Welcome to the chat server! Type /help to see the commands.\n";
     write(client_socket, welcome_message, strlen(welcome_message));
 }
 
@@ -156,7 +156,8 @@ int main() {
     // Set server address configuration
     server_address.sin_family = AF_INET;
     server_address.sin_addr.s_addr = INADDR_ANY;
-    server_address.sin_port = htons(9999);
+    int port_no = 9999;
+    server_address.sin_port = htons(port_no);
     
     // Bind server socket to address
     if (bind(server_socket, (struct sockaddr *)&server_address, sizeof(server_address)) < 0) {
@@ -170,7 +171,7 @@ int main() {
         exit(EXIT_FAILURE);
     }
     
-    printf("Chat server is running. Listening on port 8888.\n");
+    printf("Chat server is running. Listening on port %i.\n",port_no);
     
     while (1) {
         // Accept a new client connection
