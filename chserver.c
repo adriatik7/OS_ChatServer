@@ -5,7 +5,7 @@
 #include <pthread.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <time.h> 
+#include <time.h>
 
 #define MAX_CLIENTS 10
 #define BUFFER_SIZE 1024
@@ -53,17 +53,16 @@ void send_private_message(const char *recipient, const char *message, const char
     }
     pthread_mutex_unlock(&clients_mutex);
 }
-void send_client_list(int client_socket) {
-    pthread_mutex_lock(&clients_mutex);
-    for (int i = 0; i < MAX_CLIENTS; i++) {
-        if (clients[i].client_socket != -1) {
-            write(client_socket, clients[i].client_name, strlen(clients[i].client_name));
-            write(client_socket, "\n", 1);
-        }
-    }
-    pthread_mutex_unlock(&clients_mutex);
+
+void send_welcome_message(int client_socket) {
+    char welcome_message[] = "Welcome to the chat server! You are now connected.\n";
+    write(client_socket, welcome_message, strlen(welcome_message));
 }
 
+void send_disconnection_message(int client_socket) {
+    char disconnection_message[] = "You have been disconnected from the server.\n";
+    write(client_socket, disconnection_message, strlen(disconnection_message));
+}
 
 void *handle_client(void *client_socket_ptr) {
     int client_socket = *(int *)client_socket_ptr;
@@ -80,13 +79,23 @@ void *handle_client(void *client_socket_ptr) {
     }
     pthread_mutex_unlock(&clients_mutex);
     
+    send_welcome_message(client_socket);
+    printf("Client '%s' connected.\n", client_name);
+    
     char message[BUFFER_SIZE];
     ssize_t bytes_received;
     
     while ((bytes_received = recv(client_socket, message, sizeof(message), 0)) > 0) {
         if (bytes_received > 1 && message[0] == '/') {
             if (strncmp(message, "/list", 5) == 0) {
-                send_client_list(client_socket);
+                pthread_mutex_lock(&clients_mutex);
+                for (int i = 0; i < MAX_CLIENTS; i++) {
+                    if (clients[i].client_socket != -1) {
+                        write(client_socket, clients[i].client_name, strlen(clients[i].client_name));
+                        write(client_socket, "\n", 1);
+                    }
+                }
+                pthread_mutex_unlock(&clients_mutex);
             } else if (strncmp(message, "/msg", 4) == 0) {
                 char *recipient = strtok(message + 5, " ");
                 char *private_message = strtok(NULL, "\n");
@@ -94,14 +103,8 @@ void *handle_client(void *client_socket_ptr) {
                     send_private_message(recipient, private_message, client_name);
                 }
             } else if (strncmp(message, "/quit", 5) == 0) {
+                send_disconnection_message(client_socket);
                 break;
-            } else if (strncmp(message, "/help", 5) == 0) {
-                char help_message[] = "Available commands:\n"
-                                      "/list: List all currently connected clients\n"
-                                      "/msg <recipient> <message>: Send a private message to a specific recipient\n"
-                                      "/quit: Disconnect from the server\n"
-                                      "/help: Show this help message\n";
-                write(client_socket, help_message, strlen(help_message));
             } else {
                 write(client_socket, "Unknown command\n", 16);
             }
@@ -117,6 +120,7 @@ void *handle_client(void *client_socket_ptr) {
     pthread_mutex_lock(&clients_mutex);
     for (int i = 0; i < MAX_CLIENTS; i++) {
         if (clients[i].client_socket == client_socket) {
+            printf("Client '%s' disconnected.\n", clients[i].client_name);
             clients[i].client_socket = -1;
             break;
         }
@@ -145,7 +149,7 @@ int main() {
     // Set server address configuration
     server_address.sin_family = AF_INET;
     server_address.sin_addr.s_addr = INADDR_ANY;
-    server_address.sin_port = htons(8888);
+    server_address.sin_port = htons(9999);
     
     // Bind server socket to address
     if (bind(server_socket, (struct sockaddr *)&server_address, sizeof(server_address)) < 0) {
