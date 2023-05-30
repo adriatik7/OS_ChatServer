@@ -3,7 +3,7 @@
 
 
 
-ChatServer është një server i thjeshtë i mesazheve i implementuar në C duke përdorur programimin e soketave (sockets) dhe multithreading. Ai lejon klientët të lidhen me serverin dhe të shkëmbejnë mesazhe me njëri-tjetrin. Serveri mbështet komanda të tilla si listimi i klientëve të lidhur, dërgimi i mesazheve private dhe shkëputja nga serveri.
+OS_ChatServer është një server i thjeshtë i mesazheve i implementuar në C duke përdorur programimin e soketave (sockets) dhe multithreading. Ai lejon klientët të lidhen me serverin dhe të shkëmbejnë mesazhe me njëri-tjetrin. Serveri mbështet komanda të tilla si listimi i klientëve të lidhur, dërgimi i mesazheve private dhe shkëputja nga serveri.
 
 ## Veçoritë
 
