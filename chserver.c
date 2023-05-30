@@ -105,7 +105,14 @@ void *handle_client(void *client_socket_ptr) {
             } else if (strncmp(message, "/quit", 5) == 0) {
                 send_disconnection_message(client_socket);
                 break;
-            } else {
+            }  else if (strncmp(message, "/help", 5) == 0) {
+                char help_message[] = "Available commands:\n"
+                                      "/list: List all currently connected clients\n"
+                                      "/msg <recipient> <message>: Send a private message to a specific recipient\n"
+                                      "/quit: Disconnect from the server\n"
+                                      "/help: Show this help message\n";
+                write(client_socket, help_message, strlen(help_message));
+            }  else {
                 write(client_socket, "Unknown command\n", 16);
             }
         } else {
